@@ -104,6 +104,49 @@ const workspace = document.querySelector('.workspace');
 const mobileScreen = window.matchMedia('(max-width: 720px)');
 let video = document.querySelector('#camera');
 let filter = 'all';
+let cleanForm = formSnapshot();
+
+function syncViewport() {
+  const viewport = window.visualViewport;
+  const root = document.documentElement;
+  if (!viewport || viewport.scale !== 1) {
+    root.style.removeProperty('--visible-height');
+    root.style.removeProperty('--keyboard-inset');
+    return;
+  }
+  root.style.setProperty('--visible-height', `${viewport.height}px`);
+  root.style.setProperty('--keyboard-inset', `${Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)}px`);
+}
+window.visualViewport?.addEventListener('resize', syncViewport);
+window.visualViewport?.addEventListener('scroll', syncViewport);
+window.addEventListener('resize', syncViewport);
+syncViewport();
+
+function formSnapshot() {
+  return JSON.stringify([...new FormData(form)]);
+}
+
+function discardChanges() {
+  return formSnapshot() === cleanForm || confirm('Discard unsaved medicine details?');
+}
+
+function startNewMedicine(openCamera = false) {
+  if (storageBlocked) {
+    focusEditor();
+    return;
+  }
+  if (!discardChanges()) return;
+  resetForm();
+  if (openCamera) document.querySelector('#open-scanner').click();
+  else focusEditor();
+}
+
+function closeEditor() {
+  if (!discardChanges()) return;
+  resetForm();
+  if (editorDialog.open) editorDialog.close();
+  else form.elements.name.focus({ preventScroll: true });
+}
 
 function notify(message, error = false) {
   clearTimeout(noticeTimer);
@@ -189,6 +232,7 @@ function resetForm() {
   document.querySelector('#form-title').textContent = 'Add a medicine';
   document.querySelector('#save').textContent = '+ Save to my cabinet';
   document.querySelector('#cancel-edit').hidden = true;
+  cleanForm = formSnapshot();
 }
 
 function focusEditor() {
@@ -239,21 +283,25 @@ form.addEventListener('submit', (event) => {
   }
 });
 
-document.querySelector('#hero-add').addEventListener('click', () => { resetForm(); focusEditor(); });
-document.querySelector('#mobile-add').addEventListener('click', () => { resetForm(); focusEditor(); });
-document.querySelector('#mobile-scan').addEventListener('click', () => document.querySelector('#open-scanner').click());
+document.querySelector('#hero-add').addEventListener('click', () => startNewMedicine());
+document.querySelector('#mobile-add').addEventListener('click', () => startNewMedicine());
+document.querySelector('#mobile-scan').addEventListener('click', () => startNewMedicine(true));
 document.querySelector('#mobile-cabinet').addEventListener('click', () => {
   document.querySelector('#cabinet-title').scrollIntoView({ block: 'start' });
   document.querySelector('#cabinet-title').focus({ preventScroll: true });
 });
-document.querySelector('#close-editor').addEventListener('click', () => editorDialog.close());
+document.querySelector('#close-editor').addEventListener('click', closeEditor);
+editorDialog.addEventListener('cancel', (event) => {
+  event.preventDefault();
+  closeEditor();
+});
 mobileScreen.addEventListener('change', () => {
   if (!mobileScreen.matches) {
     editorDialog.close();
     workspace.append(editorPanel);
   }
 });
-document.querySelector('#cancel-edit').addEventListener('click', resetForm);
+document.querySelector('#cancel-edit').addEventListener('click', closeEditor);
 document.querySelector('#search').addEventListener('input', render);
 document.querySelector('.filters').addEventListener('click', (event) => {
   const button = event.target.closest('[data-filter]');
@@ -274,12 +322,14 @@ document.querySelector('#medicine-list').addEventListener('click', (event) => {
       notify('Medicine removed. Any existing Google Calendar event is unchanged.');
     }
   } else {
+    if (!discardChanges()) return;
     activeId = medicine.id;
     form.elements.name.value = medicine.name;
     form.elements.expiry.value = medicine.expiry;
     form.elements.reminder.value = medicine.reminderDays;
     form.elements.notes.value = medicine.notes;
     setCode(medicine.barcode);
+    cleanForm = formSnapshot();
     document.querySelector('#form-title').textContent = 'Edit medicine';
     document.querySelector('#save').textContent = 'Save changes';
     document.querySelector('#cancel-edit').hidden = false;

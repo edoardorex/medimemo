@@ -51,3 +51,34 @@ test('a 320px phone uses a full-width sheet and preserves an edit when resized',
   await expect(page.locator('.workspace .editor-panel')).toBeVisible();
   await expect(page.getByLabel('Medicine name', { exact: true })).toHaveValue('A longer medicine name for a small-screen cabinet');
 });
+
+test('phone sheets stay inside the visible viewport when the keyboard opens', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile');
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto('/');
+  await page.locator('#mobile-add').click();
+  await page.evaluate(() => {
+    Object.defineProperties(visualViewport, {
+      height: { configurable: true, get: () => 300 },
+      offsetTop: { configurable: true, get: () => 40 },
+    });
+    visualViewport.dispatchEvent(new Event('resize'));
+  });
+  const sheet = await page.locator('#mobile-editor').boundingBox();
+  expect(sheet.y).toBeGreaterThanOrEqual(40);
+  expect(sheet.y + sheet.height).toBeLessThanOrEqual(341);
+  await page.locator('#mobile-editor').evaluate((dialog) => { dialog.scrollTop = dialog.scrollHeight; });
+  const close = await page.locator('#close-editor').boundingBox();
+  expect(close.y).toBeGreaterThanOrEqual(40);
+  expect(close.y + close.height).toBeLessThanOrEqual(340);
+  const backgroundY = await page.evaluate(() => scrollY);
+  await page.mouse.move(2, 2);
+  await page.mouse.wheel(0, 300);
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  expect(await page.evaluate(() => scrollY)).toBe(backgroundY);
+  await page.locator('#close-editor').click();
+  await page.locator('#mobile-scan').click();
+  const scanner = await page.locator('#scanner-dialog').boundingBox();
+  expect(scanner.y).toBeGreaterThanOrEqual(40);
+  expect(scanner.y + scanner.height).toBeLessThanOrEqual(341);
+});

@@ -93,6 +93,8 @@ test('unreadable storage is protected until an explicit reset', async ({ page })
   await expect(page.locator('#storage-error')).toBeVisible();
   await expect(page.getByLabel('Medicine name')).toBeDisabled();
   expect(await page.evaluate(() => localStorage.getItem('medimemo.v1'))).toBe('{broken');
+  await page.locator('#hero-add').click();
+  await expect(page.locator('#notice')).toContainText('Restore a backup using Import');
   page.once('dialog', (dialog) => dialog.accept());
   await page.getByRole('button', { name: 'Reset local data' }).click();
   await expect(page.getByLabel('Medicine name')).toBeEnabled();
@@ -197,4 +199,47 @@ test('a new medicine is shown even when the previous filter and search would hid
   await expect(page.getByRole('button', { name: 'All medicines', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.medicine-card')).toBeFocused();
   await expect(page.getByRole('heading', { name: 'Allergy tablets', exact: true })).toBeVisible();
+});
+
+test('closing a phone edit protects changes and a dock scan creates a separate medicine', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile');
+  await page.addInitScript(() => {
+    navigator.mediaDevices.getUserMedia = async () => { throw new DOMException('Denied', 'NotAllowedError'); };
+  });
+  await page.goto('/');
+  await addMedicine(page);
+  await page.getByRole('button', { name: 'Edit Allergy tablets', exact: true }).click();
+  await page.getByLabel('Medicine name').fill('Unsaved edit');
+  page.once('dialog', (dialog) => dialog.dismiss());
+  await page.locator('#close-editor').click();
+  await expect(page.locator('#mobile-editor')).toBeVisible();
+  await expect(page.getByLabel('Medicine name')).toHaveValue('Unsaved edit');
+  page.once('dialog', (dialog) => dialog.accept());
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#mobile-editor')).not.toBeVisible();
+  await page.locator('#mobile-scan').click();
+  await expect(page.locator('#scan-status')).toContainText('Camera permission was denied');
+  await page.locator('#manual-entry').click();
+  await expect(page.getByLabel('Medicine name')).toHaveValue('');
+  await expect(page.getByLabel('Expiry date')).toHaveValue('');
+  await page.getByLabel('Medicine name').fill('A different package');
+  await page.getByLabel('Expiry date').fill('2090-02-15');
+  await page.getByRole('button', { name: 'Save to my cabinet' }).click();
+  await expect(page.locator('#stat-total')).toHaveText('2');
+  await expect(page.getByRole('heading', { name: 'Allergy tablets', exact: true })).toBeVisible();
+});
+
+test('switching cabinet entries cannot silently overwrite a changed desktop form', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop');
+  await page.goto('/');
+  await addMedicine(page);
+  await addMedicine(page, 'Travel tablets');
+  await page.getByRole('button', { name: 'Edit Allergy tablets', exact: true }).click();
+  await page.getByLabel('Medicine name').fill('My unsaved draft');
+  page.once('dialog', (dialog) => dialog.dismiss());
+  await page.getByRole('button', { name: 'Edit Travel tablets', exact: true }).click();
+  await expect(page.getByLabel('Medicine name')).toHaveValue('My unsaved draft');
+  page.once('dialog', (dialog) => dialog.accept());
+  await page.getByRole('button', { name: 'Edit Travel tablets', exact: true }).click();
+  await expect(page.getByLabel('Medicine name')).toHaveValue('Travel tablets');
 });

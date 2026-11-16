@@ -54,6 +54,11 @@ straight back to the saved card. The layout also fits 320px screens, and date
 and reminder fields stack when space is tight.
 See the [phone-sized form](public/preview-mobile.png).
 
+Sheets adapt to the visible screen when the keyboard opens, while the cabinet
+behind them stays still. Closing or cancelling a changed form asks before
+discarding unsaved details. **Scan package** in the bottom bar starts a new
+medicine; the camera button inside an edit form scans into that existing entry.
+
 ## Calendar: deliberately simple
 
 MediMemo opens Google's event creation page with an **all-day event** on your
