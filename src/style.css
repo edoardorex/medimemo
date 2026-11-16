@@ -134,6 +134,10 @@ video { width: 100%; height: 100%; object-fit: cover; }
 .scan-guide { position: absolute; inset: 20%; border: 2px solid #e8f7dcb3; border-radius: 12px; pointer-events: none; }
 .notice { position: fixed; z-index: 10; bottom: 24px; left: 50%; transform: translateX(-50%); background: #204e3d; color: white; padding: 16px 22px; border-radius: 13px; font-size: 13px; line-height: 1.6; max-width: 560px; width: max-content; width: min(560px, calc(100% - 32px)); box-shadow: 0 8px 35px #173a3320; }
 .notice.error { background: #86493b; }
+.notice { pointer-events: none; }
+.mobile-actions { display: none; }
+.editor-close { display: none; }
+#cabinet-title { scroll-margin-top: 20px; }
 .storage-error { border: 1px solid #dfb68f; padding: 18px; border-radius: 12px; background: #fff5e7; margin: 20px 0; font-size: 13px; line-height: 1.7; }
 @media (max-width: 1240px) {
   main { margin: 0 40px; }
@@ -151,6 +155,7 @@ video { width: 100%; height: 100%; object-fit: cover; }
   .status-badge { margin-left: 52px; }
 }
 @media (max-width: 720px) {
+  body { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
   .topbar { padding: 22px 20px; }
   main { margin: 0 20px; }
   .brand { font-size: 22px; }
@@ -166,6 +171,24 @@ video { width: 100%; height: 100%; object-fit: cover; }
   .stats strong + span { font-size: 11px; line-height: 1.6; display: block; }
   .workspace { display: flex; flex-direction: column; gap: 30px; }
   .cabinet, .editor-panel { width: 100%; }
+  .workspace > .editor-panel { display: none; }
+  .mobile-editor, #scanner-dialog { width: 100%; max-width: none; max-height: calc(100dvh - 14px); margin: auto 0 0; border-radius: 24px 24px 0 0; border-bottom: 0; }
+  .mobile-editor { padding: 0; }
+  #scanner-dialog { padding: 24px 22px max(24px, env(safe-area-inset-bottom)); }
+  .mobile-editor .editor-panel { border: 0; box-shadow: none; border-radius: 0; padding: 28px 22px max(24px, env(safe-area-inset-bottom)); }
+  .mobile-editor .section-heading, #scanner-dialog .section-heading { position: sticky; top: 0; z-index: 3; background: white; padding: 10px 0; margin-top: -10px; }
+  .mobile-editor .section-heading { margin-left: -22px; margin-right: -22px; padding-left: 22px; padding-right: 22px; }
+  #scanner-dialog .section-heading { margin-left: -22px; margin-right: -22px; padding-left: 22px; padding-right: 22px; }
+  .mobile-editor .editor-close { display: grid; place-items: center; flex-shrink: 0; }
+  .mobile-editor .mini-pill { display: none; }
+  .mobile-editor #save { position: sticky; bottom: 12px; z-index: 1; box-shadow: 0 0 0 7px white; }
+  .mobile-actions { position: fixed; z-index: 5; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; padding: 9px 18px calc(9px + env(safe-area-inset-bottom)); border-top: 1px solid #dce5da; background: #fbfdfaf2; backdrop-filter: blur(16px); }
+  .mobile-actions button { display: flex; align-items: center; justify-content: center; gap: 6px; border: 0; border-radius: 11px; background: transparent; color: #446353; min-height: 48px; padding: 8px 6px; font-size: 18px; }
+  .mobile-actions button span { font-size: 11px; font-weight: 600; }
+  .mobile-actions svg { width: 18px; height: 18px; }
+  #mobile-add { background: var(--green); color: white; }
+  .notice { bottom: calc(92px + env(safe-area-inset-bottom)); }
+  .mobile-editor .notice, #scanner-dialog .notice { bottom: max(16px, env(safe-area-inset-bottom)); }
   input, select, textarea { font-size: 16px; }
   .has-medicines .hero { min-height: auto; padding: 23px 25px; }
   .has-medicines h1 { font-size: 31px; letter-spacing: -1.2px; margin-bottom: 16px; }
@@ -174,6 +197,18 @@ video { width: 100%; height: 100%; object-fit: cover; }
   .medicine-top { flex-wrap: wrap; }
   .status-badge { margin-left: 52px; font-size: 11px; padding: 7px; }
   footer { flex-direction: column; margin-top: 28px; gap: 8px; }
+}
+@media (max-width: 350px) {
+  .topbar { padding: 19px 16px; }
+  main { margin: 0 16px; }
+  .privacy-chip { font-size: 9px; padding: 6px 8px; }
+  .brand { font-size: 20px; gap: 7px; }
+  .hero { padding: 28px 21px; }
+  h1 { font-size: 37px; }
+  .mobile-editor .form-row { grid-template-columns: 1fr; gap: 0; }
+  .mobile-actions { padding-left: 10px; padding-right: 10px; }
+  .mobile-actions button { flex-direction: column; gap: 4px; }
+  .mobile-actions button span { font-size: 10px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }

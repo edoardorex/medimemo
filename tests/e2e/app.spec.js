@@ -3,9 +3,16 @@ import AxeBuilder from '@axe-core/playwright';
 import { BarcodeFormat, DataMatrixWriter } from '@zxing/library';
 
 async function addMedicine(page, name = 'Allergy tablets', expiry = '2090-01-15') {
+  if (!await page.getByLabel('Medicine name').isVisible()) await page.locator('#hero-add').click();
   await page.getByLabel('Medicine name').fill(name);
   await page.getByLabel('Expiry date').fill(expiry);
   await page.getByRole('button', { name: 'Save to my cabinet' }).click();
+}
+
+async function startCamera(page) {
+  const button = page.getByRole('button', { name: 'Scan with your camera' });
+  if (await button.isVisible()) await button.click();
+  else await page.locator('#mobile-scan').click();
 }
 
 test('save, reload, edit, filter, calendar and delete work without a backend', async ({ page }) => {
@@ -51,11 +58,11 @@ test('denied camera permission provides a manual fallback', async ({ page }) => 
     navigator.mediaDevices.getUserMedia = async () => { throw new DOMException('Permission denied', 'NotAllowedError'); };
   });
   await page.goto('/');
-  await page.getByRole('button', { name: 'Scan with your camera' }).click();
-  await expect(page.getByRole('dialog')).toBeVisible();
+  await startCamera(page);
+  await expect(page.locator('#scanner-dialog')).toBeVisible();
   await expect(page.locator('#scan-status')).toContainText('Camera permission was denied');
   await page.getByRole('button', { name: 'Use manual entry instead' }).click();
-  await expect(page.getByRole('dialog')).not.toBeVisible();
+  await expect(page.locator('#scanner-dialog')).not.toBeVisible();
   await expect(page.getByLabel('Medicine name')).toBeFocused();
 });
 
@@ -139,10 +146,10 @@ test('a Data Matrix camera frame is decoded into a GS1 expiry and the camera is 
     };
   }, pixels);
   await page.goto('/');
-  await page.getByRole('button', { name: 'Scan with your camera' }).click();
+  await startCamera(page);
   await expect(page.locator('#notice')).toContainText('Package code and expiry found');
   await expect(page.getByLabel('Expiry date')).toHaveValue('2027-06-30');
-  await expect(page.getByRole('dialog')).not.toBeVisible();
+  await expect(page.locator('#scanner-dialog')).not.toBeVisible();
   expect(await page.evaluate(() => window.testCameraTracks.every((track) => track.readyState === 'ended'))).toBe(true);
 });
 
@@ -169,10 +176,10 @@ test('closing during camera permission and reopening does not stop the new camer
     };
   });
   await page.goto('/');
-  await page.getByRole('button', { name: 'Scan with your camera' }).click();
+  await startCamera(page);
   await expect.poll(() => page.evaluate(() => window.cameraCalls)).toBe(1);
   await page.getByRole('button', { name: 'Close scanner' }).click();
-  await page.getByRole('button', { name: 'Scan with your camera' }).click();
+  await startCamera(page);
   await expect(page.locator('#scan-status')).toContainText('Camera ready');
   await page.evaluate(() => window.resolveFirstCamera());
   await expect.poll(() => page.evaluate(() => window.testStreams[0].getTracks()[0].readyState)).toBe('ended');

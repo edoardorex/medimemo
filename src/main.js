@@ -76,6 +76,14 @@ document.querySelector('#app').innerHTML = `
     </div>
     <footer><span>Made for a little less &ldquo;oh, I forgot.&rdquo;</span><span>Stored on this browser &middot; Not medical advice</span></footer>
   </main>
+  <nav class="mobile-actions" aria-label="Mobile cabinet actions">
+    <button type="button" id="mobile-cabinet">${pill}<span>Cabinet</span></button>
+    <button type="button" id="mobile-add">+<span>Add medicine</span></button>
+    <button type="button" id="mobile-scan">${scan}<span>Scan package</span></button>
+  </nav>
+  <dialog id="mobile-editor" class="mobile-editor" aria-labelledby="form-title">
+    <button type="button" class="close-button editor-close" id="close-editor" aria-label="Close medicine form">&times;</button>
+  </dialog>
   <dialog id="scanner-dialog" aria-labelledby="scanner-title">
     <div class="section-heading"><h2 id="scanner-title">Let's scan that package</h2><button class="close-button" id="close-scanner" aria-label="Close scanner" type="button">&times;</button></div>
     <p>Point your camera at a barcode or Data Matrix in good light. Keep the entire code in view.</p>
@@ -90,12 +98,17 @@ document.querySelector('#app').innerHTML = `
 
 const form = document.querySelector('#medicine-form');
 const dialog = document.querySelector('#scanner-dialog');
+const editorDialog = document.querySelector('#mobile-editor');
+const editorPanel = document.querySelector('.editor-panel');
+const workspace = document.querySelector('.workspace');
+const mobileScreen = window.matchMedia('(max-width: 720px)');
 let video = document.querySelector('#camera');
 let filter = 'all';
 
 function notify(message, error = false) {
   clearTimeout(noticeTimer);
   const notice = document.querySelector('#notice');
+  (dialog.open ? dialog : editorDialog.open ? editorDialog : document.body).append(notice);
   notice.textContent = message;
   notice.classList.toggle('error', error);
   notice.hidden = false;
@@ -158,7 +171,7 @@ function render() {
         <button class="text-button" data-edit="${h(medicine.id)}" type="button" aria-label="Edit ${h(medicine.name)}">Edit</button>
         <button class="text-button danger" data-delete="${h(medicine.id)}" type="button" aria-label="Delete ${h(medicine.name)}">Delete</button>
       </div></div></article>`;
-  }).join('') : `<div class="empty-state"><span class="empty-icon">${pill}</span><h3>${medicines.length ? 'No matches just yet.' : 'A fresh start for your cabinet.'}</h3><p>${medicines.length ? 'Try another search or filter.' : 'Add your first medicine on the right.<br />Future you will appreciate it.'}</p></div>`;
+  }).join('') : `<div class="empty-state"><span class="empty-icon">${pill}</span><h3>${medicines.length ? 'No matches just yet.' : 'A fresh start for your cabinet.'}</h3><p>${medicines.length ? 'Try another search or filter.' : 'Choose Add a medicine to get started.<br />Future you will appreciate it.'}</p></div>`;
   document.querySelector('#export').disabled = !medicines.length || storageBlocked;
 }
 
@@ -179,7 +192,18 @@ function resetForm() {
 }
 
 function focusEditor() {
-  document.querySelector('.editor-panel').scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
+  if (storageBlocked) {
+    notify('Restore a backup using Import, or reset the unreadable local data before adding a medicine.', true);
+    return;
+  }
+  if (mobileScreen.matches) {
+    editorPanel.querySelector('.section-heading').append(document.querySelector('#close-editor'));
+    editorDialog.append(editorPanel);
+    if (!editorDialog.open) editorDialog.showModal();
+    editorDialog.scrollTop = 0;
+  } else {
+    editorPanel.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
+  }
   form.elements.name.focus({ preventScroll: true });
 }
 
@@ -200,6 +224,7 @@ form.addEventListener('submit', (event) => {
     if (next.length > 1000) throw new Error('Your cabinet is full (1,000 medicines). Export a backup before removing old entries.');
     if (commit(next)) {
       resetForm();
+      editorDialog.close();
       filter = 'all';
       document.querySelector('#search').value = '';
       document.querySelectorAll('[data-filter]').forEach((item) => item.setAttribute('aria-pressed', String(item.dataset.filter === 'all')));
@@ -215,6 +240,19 @@ form.addEventListener('submit', (event) => {
 });
 
 document.querySelector('#hero-add').addEventListener('click', () => { resetForm(); focusEditor(); });
+document.querySelector('#mobile-add').addEventListener('click', () => { resetForm(); focusEditor(); });
+document.querySelector('#mobile-scan').addEventListener('click', () => document.querySelector('#open-scanner').click());
+document.querySelector('#mobile-cabinet').addEventListener('click', () => {
+  document.querySelector('#cabinet-title').scrollIntoView({ block: 'start' });
+  document.querySelector('#cabinet-title').focus({ preventScroll: true });
+});
+document.querySelector('#close-editor').addEventListener('click', () => editorDialog.close());
+mobileScreen.addEventListener('change', () => {
+  if (!mobileScreen.matches) {
+    editorDialog.close();
+    workspace.append(editorPanel);
+  }
+});
 document.querySelector('#cancel-edit').addEventListener('click', resetForm);
 document.querySelector('#search').addEventListener('input', render);
 document.querySelector('.filters').addEventListener('click', (event) => {

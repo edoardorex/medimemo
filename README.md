@@ -34,7 +34,7 @@ Calendar event before the date sneaks up on you. No signup, no server, no drama.
 | **A heads-up for future you** | A prefilled Google Calendar event 7, 14, 30, or 60 days before expiry |
 | **A clear overview** | Expired items, the next 30 days, search, and expiry-first sorting |
 | **Your data, your browser** | Local storage, with JSON export and restore |
-| **Small-screen friendly** | Responsive layout, labelled controls, keyboard support, and reduced-motion support |
+| **Made for your phone** | Reachable bottom actions, a full-width add/edit sheet, large inputs, and safe-area spacing |
 
 The interface is in English. Dates are displayed using your browser's locale.
 No paid services, API keys, or backend configuration are needed.
@@ -47,6 +47,12 @@ No paid services, API keys, or backend configuration are needed.
    the event, set its notification if needed, and save it.
 
 That's it. Future you says thanks.
+
+On a phone, use the bottom bar to jump to your **Cabinet**, **Add medicine**, or
+**Scan package**. Adding and editing open a compact sheet; saving brings you
+straight back to the saved card. The layout also fits 320px screens, and date
+and reminder fields stack when space is tight.
+See the [phone-sized form](public/preview-mobile.png).
 
 ## Calendar: deliberately simple
 
