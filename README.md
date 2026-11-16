@@ -9,6 +9,7 @@ expiry dates, camera scanning, and a friendly nudge from Google Calendar.
 
 [Open MediMemo](https://edoardorex.github.io/medimemo/) ·
 [Getting started](#run-locally) ·
+[Mobile previews](#optimized-for-mobile) ·
 [How scanning works](#point-scan-double-check)
 
 ![License: MIT](https://img.shields.io/badge/license-MIT-176c55)
@@ -48,16 +49,27 @@ No paid services, API keys, or backend configuration are needed.
 
 That's it. Future you says thanks.
 
+## Optimized for mobile
+
 On a phone, use the bottom bar to jump to your **Cabinet**, **Add medicine**, or
 **Scan package**. Adding and editing open a compact sheet; saving brings you
 straight back to the saved card. The layout also fits 320px screens, and date
 and reminder fields stack when space is tight.
-See the [phone-sized form](public/preview-mobile.png).
 
 Sheets adapt to the visible screen when the keyboard opens, while the cabinet
 behind them stays still. Closing or cancelling a changed form asks before
 discarding unsaved details. **Scan package** in the bottom bar starts a new
 medicine; the camera button inside an edit form scans into that existing entry.
+
+<p align="center">
+  <a href="docs/screenshots/phone-cabinet.png"><img src="docs/screenshots/phone-cabinet.png" width="300" alt="MediMemo in a smartphone frame, showing expiry counts, medicine cards, Calendar reminders, and bottom actions" /></a>
+  <a href="docs/screenshots/phone-add-medicine.png"><img src="docs/screenshots/phone-add-medicine.png" width="300" alt="MediMemo's full-width medicine form in a smartphone frame, with camera scanning, expiry date, and reminder settings" /></a>
+</p>
+
+*Your cabinet and the add-medicine sheet. Phone-sized app screenshots in a generic
+smartphone frame; illustrative sample data only.*
+
+Tap either preview to open the full-size image.
 
 ## Calendar: deliberately simple
 
